@@ -3,7 +3,7 @@
 # Standard library imports
 
 # Remote library imports
-from flask import request, make_response, jsonify
+from flask import request, make_response, jsonify, session
 from flask_restful import Resource
 
 # Local imports
@@ -12,6 +12,43 @@ from config import app, db, api
 from models import db, User, Post, Like, Comment, Follower
 
 # Views go here!
+
+@app.before_request
+def check_login():
+    if not session['user_id'] \
+        and request.endpoint != 'login' \
+        and request.endpoint != 'home'\
+        and request.endpoint != 'users':
+        return {"error":"unauthorized"},401
+
+class Login(Resource):
+    def post(self):
+        username = request.get_json()['user_name']
+        user =  User.query.filter(User.user_name==username).first()
+        password = request.get_json()['password']
+        if user.authenticate(password):
+            session['user_id']= user.id
+            return user.to_dict(),200
+        
+        return  {"error":"username or password is incorrect"},401
+
+class Logout(Resource):
+    def delete(self):
+        session['user_id']=None
+        return {"message":'logged out'},204
+
+api.add_resource(Logout,"/logout", endpoint='logout')
+api.add_resource(Login,'/login',endpoint='login')
+
+class CheckSession(Resource):
+    def get(self):
+        user = User.query.filter(User.id == session.get('user_id')).first()
+        if user:
+            return user.to_dict()
+        else:
+            return {"message":"the current user is unauthorized to access"},401
+
+api.add_resource(CheckSession,'/session/check')
 
 @app.route('/')
 def index():
