@@ -14,7 +14,7 @@ class User(db.Model, SerializerMixin):
     password = db.Column(db.String, nullable=False)
     bio = db.Column(db.Text, default="")
     profile_picture = db.Column(db.String, default="")
-    posts = db.relationship('Post', backref='user', lazy=True)
+    posts = db.relationship('Post', back_populates='user', lazy=True)
     followers = db.relationship(
         'Follower',
         foreign_keys='Follower.followed_id',
@@ -37,6 +37,15 @@ class Post(db.Model, SerializerMixin):
     image = db.Column(db.String, default="")
     likes = db.relationship('Like', backref='post', lazy=True)
     comments = db.relationship('Comment', backref='post', lazy=True)
+
+     # Relationship: One-to-Many (Post -> User)
+    user = db.relationship('User', back_populates='posts')
+
+    @property
+    def username(self):
+        """Access the username of the user who created the post."""
+        return self.user.username
+
 
 class Like(db.Model, SerializerMixin):
     __tablename__ = 'Likes'
