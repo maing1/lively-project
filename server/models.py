@@ -32,7 +32,7 @@ class User(db.Model, SerializerMixin):
     )
 
     @validates('name')
-    def validate_name(self,key,value):
+    def validate_username(self,key,value):
         if len(value) < 3:
             ValueError('name must be 3 characters and above')
         return value

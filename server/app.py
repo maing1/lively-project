@@ -79,6 +79,7 @@ class Posts(Resource):
         image = data.get('image')
         user_id = data.get('user_id')
 
+
         user = User.query.get(user_id)
         if not user:
             return {"errors": ["Invalid User ID."]}, 400
@@ -113,25 +114,29 @@ class Posts(Resource):
 api.add_resource(Posts, '/posts', '/posts/<int:id>')
 
 class Users(Resource):
-    def get(self, id):
-        user = User.query.get(id)
-        if not user:
-            return {"error": "User not found"}, 404
-        
-        return {
-            "id": user.id,
-            "username": user.username,
-            "email": user.email,
-            "bio": user.bio,
-            "profile_picture": user.profile_picture,
-            "followers_count": len(user.followers),
-            "following_count": len(user.following),
-            "posts": [
-                {"id": post.id, "content": post.content, "image": post.image}
-                for post in user.posts
-            ],
-        }
+    def get(self):
+        username = request.args.get('username')
+        if username:
+            users = User.query.filter(User.username.ilike(f"%{username}%")).all()
+        else:
+            users = User.query.all()
 
+        return [
+            {
+                "id": user.id,
+                "username": user.username,
+                "email": user.email,
+                "bio": user.bio,
+                "profile_picture": user.profile_picture,
+                "followers_count": len(user.followers),
+                "following_count": len(user.following),
+                "posts": [
+                    {"id": post.id, "content": post.content, "image": post.image}
+                    for post in user.posts
+                ],
+            }
+            for user in users
+        ]
     def post(self):
         data = request.get_json()
 
