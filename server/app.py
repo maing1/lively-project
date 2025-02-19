@@ -6,6 +6,7 @@
 from flask import request, make_response, jsonify, session
 from flask_restful import Resource
 
+
 # Local imports
 from config import app, db, api
 # Add your model imports
@@ -15,7 +16,7 @@ from models import db, User, Post, Like, Comment, Follower
 
 @app.before_request
 def check_login():
-    if not session['user_id'] \
+    if not session.get('user_id')  \
         and request.endpoint != 'login' \
         and request.endpoint != 'home'\
         and request.endpoint != 'users':
@@ -23,14 +24,15 @@ def check_login():
 
 class Login(Resource):
     def post(self):
-        username = request.get_json()['user_name']
-        user =  User.query.filter(User.user_name==username).first()
+        username = request.get_json()['username']
+        user =  User.query.filter(User.username==username).first()
         password = request.get_json()['password']
-        if user.authenticate(password):
-            session['user_id']= user.id
-            return user.to_dict(),200
-        
-        return  {"error":"username or password is incorrect"},401
+        if not user:
+            return {"error": "User not found"}, 404
+
+        if not user.authenticate(password):
+         return {"error": "Username or password is incorrect"}, 401
+
 
 class Logout(Resource):
     def delete(self):
@@ -142,17 +144,17 @@ class Users(Resource):
 
         username = data.get('username')
         email = data.get('email')
-        password = data.get('password')
+        password_hash = data.get('password_hash')
         bio = data.get('bio', "")
         profile_picture = data.get('profile_picture', "")
 
-        if not username or not email or not password:
+        if not username or not email or not password_hash:
             return {"error": "Missing required fields"}, 400
 
         new_user = User(
             username=username,
             email=email,
-            password=password,
+            password_hash=password_hash,
             bio=bio,
             profile_picture=profile_picture
         )
@@ -290,5 +292,6 @@ api.add_resource(Comments, '/comments', '/comments/<int:id>')
         
 
 if __name__ == '__main__':
-    app.run(port=5555, debug=True)
+    port = int(os.environ.get('PORT', 5000))  # Render assigns a dynamic port
+    app.run(host='0.0.0.0', port=port)
 

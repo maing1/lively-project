@@ -30,9 +30,14 @@ def seed_data():
 
         # Seed Users
         print("Seeding users...")
-        user1 = User(username="user1", email="user1@example.com", password="password")
-        user2 = User(username="user2", email="user2@example.com", password="password")
-        user3 = User(username="user3", email="user3@example.com", password="password")
+        user1 = User(username="user1", email="user1@example.com")
+        user1._password_hash = "password123" 
+
+        user2 = User(username="user2", email="user2@example.com")
+        user2._password_hash = "password123"
+
+        user3 = User(username="user3", email="user3@example.com")
+        user3._password_hash = "password123"
 
         db.session.add_all([user1, user2, user3])
         db.session.commit()
